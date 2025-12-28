@@ -69,14 +69,18 @@ This project reinforced the importance of honest failure analysis and system-lev
 Demo Videos
 
 Links to short demonstrations showing:
-
-Manual RC control
-
-Autonomous obstacle avoidance
-
-IMU-based scanning behavior
-
 (YouTube / TikTok links)
+
+Manual RC control: https://www.tiktok.com/@typicalcircuit/video/7583457047086189855    
+https://www.tiktok.com/@typicalcircuit/video/7581312163025931550
+
+Autonomous obstacle avoidance: https://www.tiktok.com/@typicalcircuit/video/7578304480257576222
+Extra Videos for the project journey 😊:
+https://www.tiktok.com/@typicalcircuit/video/7572046296685530398
+https://www.tiktok.com/@typicalcircuit/video/7576484275625725214
+https://www.tiktok.com/@typicalcircuit/video/7577886115139439903
+https://www.tiktok.com/@typicalcircuit/video/7578291330447707423
+https://www.tiktok.com/@typicalcircuit/video/7578304480257576222
 
 🧠 How It Works
 
