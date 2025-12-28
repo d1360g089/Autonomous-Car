@@ -88,11 +88,11 @@ Control: PWM-based differential drive with state-based autonomy
 
 # 📁 Files
 
-receiver/
+receiver/Autonomous.ino
 
 Autonomous + manual control firmware
 
-transmitter/
+transmitter/Transmitter.ino
 
 Joystick-based wireless controller firmware
 
