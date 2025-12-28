@@ -66,3 +66,49 @@ Control performance is tightly coupled to hardware constraints
 Autonomous systems require perception, estimation, and control, not just decision logic
 
 This project reinforced the importance of honest failure analysis and system-level thinking in embedded robotics.
+Demo Videos
+
+Links to short demonstrations showing:
+
+Manual RC control
+
+Autonomous obstacle avoidance
+
+IMU-based scanning behavior
+
+(YouTube / TikTok links)
+
+🧠 How It Works
+
+Microcontroller: Arduino (UNO-class)
+Motors: DC motors with H-bridge drivers
+Wireless: nRF24L01 (2.4 GHz)
+Sensors: BNO055 IMU (yaw estimation)  Ultrasonic sensor (distance measurement)
+Control: PWM-based differential drive with state-based autonomy
+
+# 📁 Files
+
+receiver/
+
+Autonomous + manual control firmware
+
+transmitter/
+
+Joystick-based wireless controller firmware
+
+🛠️ Components Used
+
+Arduino Uno
+
+BNO055 IMU
+
+nRF24L01 RF modules (Tx/Rx)
+
+Ultrasonic distance sensor
+
+DC motors + motor drivers
+
+Joystick modules
+
+Breadboard, wiring, chassis
+
