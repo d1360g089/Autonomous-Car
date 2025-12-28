@@ -11,25 +11,19 @@ The autonomous mode uses a forward-driving behavior combined with obstacle detec
 
 Yaw estimation is derived from the IMU’s quaternion output, avoiding Euler-angle singularities and allowing smoother rotational tracking during scanning and turning.
 
-Control Strategy and Algorithm Design
+# Control Strategy and Algorithm Design
 
 The autonomous behavior is structured as a simple state-based system:
 
-Forward Drive: Continuous forward motion while no obstacle is detected
-
-Detection: Ultrasonic sensor triggers a stop when distance falls below a threshold
-
-Scan: In-place rotation while recording distance measurements every ~10°
-
-Decision: Selection of the direction with maximum measured clearance
-
-Reorientation: IMU-based rotation to the selected heading
-
-Resume Motion: Return to forward driving
-
+1. Forward Drive: Continuous forward motion while no obstacle is detected
+2. Detection: Ultrasonic sensor triggers a stop when distance falls below a threshold
+3. Scan: In-place rotation while recording distance measurements every ~10°
+4. Decision: Selection of the direction with maximum measured clearance
+5. Reorientation: IMU-based rotation to the selected heading
+6. Resume Motion: Return to forward driving
 Motor control is implemented using PWM-based differential drive. Turning is achieved by driving left and right wheels in opposite directions at equal speeds.
 
-IMU and Orientation Estimation
+# IMU and Orientation Estimation
 
 Sensor: BNO055 IMU
 
@@ -39,29 +33,29 @@ Usage: Yaw tracking for rotational scanning and angle-based turns
 
 The IMU is used strictly for heading estimation, not full position tracking. While quaternion-based yaw computation improves rotational stability and avoids gimbal lock, long-term drift and noise remain limiting factors in the absence of encoder-based feedback or sensor fusion.
 
-Manual Wireless Control (RC Mode)
+# Manual Wireless Control (RC Mode)
 
 In manual mode, joystick inputs are transmitted wirelessly using an nRF24L01 module. The joystick’s X and Y axes are mapped to left and right motor speeds, enabling differential steering.
 
 This mode served both as a functional remote-control system and as a baseline for testing motor response, communication latency, and drive behavior prior to autonomous operation.
 
-Key Challenges and Limitations
+# Key Challenges and Limitations
 
 This project intentionally exposed several real-world constraints:
 
-Ultrasonic Sensor Noise: Inconsistent readings due to surface angle and environmental factors
+  Ultrasonic Sensor Noise: Inconsistent readings due to surface angle and environmental factors
+  
+  IMU Drift: Accumulated yaw error during extended scans
+  
+  Lack of Odometry: No wheel encoders, limiting position estimation
+  
+  Blocking Control Logic: Delays and blocking loops reduce responsiveness
+  
+  Compute Constraints: Arduino-class hardware limits real-time sensor fusion and control complexity
+  
+  These limitations significantly influenced system design choices and algorithm simplicity.
 
-IMU Drift: Accumulated yaw error during extended scans
-
-Lack of Odometry: No wheel encoders, limiting position estimation
-
-Blocking Control Logic: Delays and blocking loops reduce responsiveness
-
-Compute Constraints: Arduino-class hardware limits real-time sensor fusion and control complexity
-
-These limitations significantly influenced system design choices and algorithm simplicity.
-
-Engineering Lessons Learned
+# Engineering Lessons Learned
 
 IMU-only autonomy is insufficient for reliable navigation
 
