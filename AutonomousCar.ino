@@ -7,6 +7,8 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 #include <math.h>
+#include <Servo.h>
+
 
 #define BNO055_SAMPLERATE_DELAY_MS 10
 
@@ -35,11 +37,11 @@ int motorSpeed2 = 150;
 int motorSpeed;
 
 // Right Wheels
-int in5 = 12; //pin 9 -> A6
+int in5 = A4; //pin 12 -> A4
 int in6 = A2;  // pin 3
 int enc = 5;   // need to change later not pwm
 
-int in1 = 13;  // pin 8 -> A7
+int in1 = A5;  // 13-> A5
 int in2 = A0; // pin 9
 int ena = 9;  // pin 10 -> pin 9 
 
@@ -66,6 +68,16 @@ int pingTravelTime;
 float pingTravelDistance;
 float distanceToTarget;
 
+int servoPin = 12;
+
+Servo myServo;
+
+float servoPos;
+
+float deltaX = 5;
+
+
+
 
 
 
@@ -84,6 +96,19 @@ float getYaw();
 float readDistance();
 float normalizeAngle(float a);
 void rotateToRelativeAngle(float degrees, int speed = 220);
+void rotateRight(float degrees);
+
+
+void rotateLeft(float degrees);
+
+
+
+void scanEnvironment();
+int findBestIndex();
+int servoAngleToTurn();
+void rotateToAngle(int relativeAngle);
+
+
 
 float t;
 
@@ -95,19 +120,28 @@ float yaw;
 
 
 
+const int N = 18;
+float distances[N];
+float angles[N];
+
+bool isTurning = false;
+
+
+
+
+
 
 void setup() {
   Serial.begin(115200);
   myIMU.begin();
-
-
-
-  /*
+/*
   radio.begin();
   radio.openReadingPipe(0, address);
   radio.setPALevel(RF24_PA_MIN);
   radio.startListening();
 */
+  myServo.attach(servoPin);
+
   
 
 
@@ -131,119 +165,107 @@ void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
+  servoPos=0;
+
+  
 
 }
 
 void loop() {
 
-  static bool scanning  = false;
-  static float distances[36];
-  static float yawAtMeasurement[36];
-  static int scanIndex = 0;
-  static float yawWhenScanStarted = 0;
+// get distance
 
-  float currentDistance = readDistance();
-
-  Serial.print("Dist: ");
-  Serial.print(currentDistance);
-  Serial.print("Yaw: ");
-  Serial.println(getYaw(), 1);
+  Serial.print(readDistance());
+  Serial.print(",");
+  Serial.println(servoPos);
   
-  // Normal Forward Driving 
-  if (!scanning && currentDistance > 17){
-    setSpeed(240,240);
-    // forwardRight() and forwardLeft() are already called
+  forward();
 
+if (readDistance() < 15) {
+
+
+  stopCar();
+
+  backwards();
+  delay(500);
+  stopCar();
+
+  scanEnvironment();
+
+  myServo.write(90);
+  delay(300);
+
+
+  int bestIdx = findBestIndex();
+
+  float bestAngle = angles[bestIdx];
+  float bestDist = distances[bestIdx];
+
+  int turnAngle = bestAngle-90;
+
+  if (turnAngle > 0){
+    rotateLeft(turnAngle);
   }
-
-  //Obstacle detected
-  else if (!scanning && currentDistance <= 17) {
-    stopCar();
-    delay(100);
-
-    scanning = true;
-    scanIndex = 0;
-    yawWhenScanStarted = getYaw();
-
-    //Start rotating right
-    turnRight(220);
-
-    // we are in scanning mode
-
+  
+  if (turnAngle < 0){
+    rotateRight(abs(turnAngle));
   }
-
-  if (scanning){
-    float currentYaw = getYaw();
-    float rotatedSoFar = normalizeAngle(currentYaw - yawWhenScanStarted);
-
-    if (rotatedSoFar >= (scanIndex*10.0f)){
-      float d = readDistance();
-      // filter bad readings
-      if (d < 2 || d > 400) d = 0;
-
-      distances[scanIndex] = d;
-      yawAtMeasurement[scanIndex] = currentYaw;
-
-      scanIndex++;
-
-      //finished full scan
-      if (scanIndex >= 36){
-        stopCar();
-        delay(30);
-
-        //find index with max distance
-        int bestIndex = 0;
-        float maxDistance = distances[0];
-
-        for (int i = 1; i < 36; i++){
-          if (distances[i] > maxDistance){
-            maxDistance = distances[i];
-            bestIndex = i;
-
-          }
-        }
-
-        float bestYaw = yawAtMeasurement[bestIndex];
-        float yawNow = getYaw();
-
-        float angleToTurn = normalizeAngle(bestYaw - yawNow);
-        
-        if (angleToTurn > 180) angleToTurn -= 360;
-
-        rotateToRelativeAngle(angleToTurn, 220);
-
-        scanning = false;
+  
 
 
+  delay(300);
+  forward();
 
 
+}
+else {
+  servoPos = 90;
+  myServo.write((int)servoPos);
+  forward();
 
+}
 
-      }
-    }
-  }
+  
 
-
-
-    
-
-
-
-
-
-  }
+  delay(15);
   
 
 
 
 
 
+  /*
+  servoPos = servoPos + deltaX;
 
-  //setSpeed(left, right);
+  
 
+  
+  if (servoPos >= 180){
+    servoPos = 180;
+    deltaX *= -1;
+
+  }
+  else if (servoPos <= 0) {
+    servoPos = 0;
+    deltaX *= -1;
+
+  }
+
+  myServo.write((int)servoPos);
+  
+  Serial.print(readDistance());
+  Serial.print(",");
+  Serial.println(servoPos);
+
+
+ */
+
+
+  
 
 
 // Code for Remote Control 
+
 /*
   if (radio.available()){
     
@@ -272,23 +294,78 @@ void loop() {
     
   }
 
-*/
-
-
-
-
-
-
-
-
-
-float normalizeAngle(float a){
-  while(a < 0) a += 360;
-  while (a >= 360) a -= 360;
-  return a;
+  */
 
 }
 
+
+
+void scanEnvironment() {
+  int idx = 0;
+
+
+  for (int servoPos=0; servoPos <=180; servoPos+=10){
+
+    myServo.write(servoPos);
+    delay(120);
+
+    angles[idx] = servoPos;
+    distances[idx] = readDistance();
+
+    idx++;
+
+
+  }
+
+}
+
+int findBestIndex(){
+  int bestIdx = 0;
+  float maxDist = distances[0];
+
+  for (int i = 1; i< N; i++){
+    if (distances[i] > maxDist){
+      maxDist = distances[i];
+      bestIdx = i;
+
+    }
+  }
+
+  return bestIdx;
+
+}
+
+
+int servoAngleToTurn(int servoAngle) {
+  return servoAngle - 90;
+}
+
+void rotateToAngle(int relativeAngle) {
+
+  if (relativeAngle > 0) {
+    rotateRight(relativeAngle);
+  } else {
+    rotateLeft(relativeAngle);//Make function
+  }
+
+  stopCar();
+}
+
+void rotateLeft(float degrees){
+
+  t = (degrees/(103)) * 1000;
+  turnLeft(200);
+  delay(t);
+  stopCar();
+  delay(50);
+
+}
+
+
+
+
+
+// getting distance
 
 float readDistance(){
   digitalWrite(trigPin, LOW);
@@ -309,6 +386,24 @@ float readDistance(){
 
 
 }
+
+
+
+
+
+
+
+
+float normalizeAngle(float a){
+  while(a < 0) a += 360;
+  while (a >= 360) a -= 360;
+  return a;
+
+}
+
+
+
+
 
 float getYaw(){
 
@@ -430,9 +525,6 @@ void rotateRight(float degrees){
   delay(t);
   stopCar();
   delay(50);
-
-  
-
 
   
 }
@@ -621,4 +713,5 @@ void stopCar(){
 
 
 }
+
 
